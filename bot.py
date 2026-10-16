@@ -4,7 +4,7 @@ import asyncio
 import discord
 from discord.ext import commands
 import database
-from config import DISCORD_TOKEN, OWNER_ID, make_kawaii_embed, COLOR_ERROR, random_sad
+from config import DISCORD_TOKEN, OWNER_ID, make_kawaii_embed, COLOR_ERROR
 from web_dashboard.server import start_web_server
 
 def build_intents(privileged: bool = True) -> discord.Intents:
