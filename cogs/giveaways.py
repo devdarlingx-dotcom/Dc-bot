@@ -5,7 +5,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 import database
-from config import is_owner, denied_embed, make_kawaii_embed, COLOR_PINK, COLOR_ROSE, COLOR_SUCCESS, COLOR_WARN, random_happy
+from config import is_owner, denied_embed, make_kawaii_embed, COLOR_PINK, COLOR_ROSE, COLOR_SUCCESS, COLOR_WARN
 
 def parse_duration(duration_str: str) -> float | None:
     """Parses strings like 30s, 10m, 2h, 1d into seconds."""
@@ -21,9 +21,8 @@ class GiveawayButton(discord.ui.Button):
     def __init__(self, message_id: int, entries: int = 0):
         super().__init__(
             style=discord.ButtonStyle.primary,
-            label=f"🎉 Enter Giveaway ({entries})",
-            custom_id=f"destiny_gw_{message_id}",
-            emoji="✨"
+            label=f"✦ Enter Giveaway ({entries})",
+            custom_id=f"destiny_gw_{message_id}"
         )
 
 class Giveaways(commands.Cog):
@@ -45,27 +44,29 @@ class Giveaways(commands.Cog):
                 message_id = int(custom_id.replace("destiny_gw_", ""))
                 entered, count = await database.toggle_giveaway_participant(message_id, interaction.user.id)
                 
-                # Update button count on the original message
+                # Update button count on the message
                 try:
                     view = discord.ui.View(timeout=None)
                     view.add_item(discord.ui.Button(
                         style=discord.ButtonStyle.primary,
-                        label=f"🎉 Enter Giveaway ({count})",
-                        custom_id=f"destiny_gw_{message_id}",
-                        emoji="✨"
+                        label=f"✦ Enter Giveaway ({count})",
+                        custom_id=f"destiny_gw_{message_id}"
                     ))
                     await interaction.message.edit(view=view)
                 except Exception:
                     pass
 
+                gw = await database.get_giveaway(message_id)
+                prize_name = gw["prize"] if gw else "the prize"
+
                 if entered:
                     await interaction.response.send_message(
-                        f"✨ Yay! You are now entered into the giveaway! Good luck, cutie! (੭ˊᵕˋ)੭ 🌸",
+                        f"✦ You entered the giveaway for **{prize_name}**. Good luck! 🌸",
                         ephemeral=True
                     )
                 else:
                     await interaction.response.send_message(
-                        f"🎀 You have withdrawn your entry from the giveaway. (｡•́︿•̀｡)",
+                        f"✦ You have withdrawn your entry from the giveaway.",
                         ephemeral=True
                     )
             except Exception as e:
@@ -73,7 +74,7 @@ class Giveaways(commands.Cog):
 
     @tasks.loop(seconds=10)
     async def giveaway_checker(self):
-        """Background worker that continuously tracks giveaway end times."""
+        """Background worker that tracks giveaway completion."""
         try:
             active_gws = await database.get_active_giveaways()
             now = time.time()
@@ -107,11 +108,15 @@ class Giveaways(commands.Cog):
             return
 
         if not participants:
-            embed = make_kawaii_embed(
-                title=f"🌸 Giveaway Ended: {prize} (｡•́︿•̀｡)",
-                description="Unfortunately, no one entered this giveaway! Better luck next time! 🎀",
+            embed = discord.Embed(
+                title=f"✦ GIVEAWAY ENDED ✦",
+                description=(
+                    f"### 🎁 {prize}\n\n"
+                    f"> No valid entries were received for this giveaway."
+                ),
                 color=COLOR_WARN
             )
+            embed.set_footer(text="Destiny ✦ Giveaway Closed")
             disabled_view = discord.ui.View(timeout=None)
             disabled_view.add_item(discord.ui.Button(
                 style=discord.ButtonStyle.secondary,
@@ -126,40 +131,40 @@ class Giveaways(commands.Cog):
         winners = random.sample(participants, num_winners)
         mentions = " ".join([f"<@{w}>" for w in winners])
 
-        embed = make_kawaii_embed(
-            title=f"🌸✨ Giveaway Ended: {prize} ✨🌸",
+        embed = discord.Embed(
+            title=f"✦ GIVEAWAY ENDED ✦",
             description=(
+                f"### 🎁 {prize}\n\n"
                 f"**Winner(s):** {mentions}\n"
-                f"**Hosted by:** Master Destiny 🌸\n"
-                f"**Total Entries:** {len(participants)} cuties 💕"
+                f"**Total Entries:** `{len(participants)}`"
             ),
             color=COLOR_SUCCESS
         )
+        embed.set_footer(text="Destiny ✦ Giveaway Complete")
         disabled_view = discord.ui.View(timeout=None)
         disabled_view.add_item(discord.ui.Button(
             style=discord.ButtonStyle.secondary,
             label=f"Ended ({len(participants)} Entries)",
-            disabled=True,
-            emoji="🎁"
+            disabled=True
         ))
         await msg.edit(embed=embed, view=disabled_view)
 
         # Celebratory win message
         await channel.send(
-            f"🎉 (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ Congratulations {mentions}! You won **{prize}**! 🍰✨"
+            f"✦ Congratulations {mentions}! You won **{prize}**! 🌸"
         )
 
     gw_group = app_commands.Group(
         name="giveaway",
-        description="🌸 Manage cute giveaways and roll prizes"
+        description="🌸 Manage giveaways"
     )
 
-    @gw_group.command(name="start", description="🌸 Start a kawaii giveaway with interactive buttons")
+    @gw_group.command(name="start", description="🌸 Start a clean, aesthetic giveaway")
     @app_commands.describe(
         duration="Duration (e.g. 30s, 10m, 2h, 1d)",
-        prize="What lucky cuties can win",
+        prize="Prize description",
         winners="Number of winners (default: 1)",
-        channel="Channel to post giveaway in (defaults to current)"
+        channel="Target channel for giveaway"
     )
     async def start_giveaway(
         self,
@@ -176,38 +181,36 @@ class Giveaways(commands.Cog):
         seconds = parse_duration(duration)
         if not seconds:
             return await interaction.response.send_message(
-                "🌸 Invalid duration! Use formats like `30s`, `10m`, `2h`, or `1d`! (｡•́︿•̀｡)",
+                "✦ Invalid duration format. Use `30s`, `10m`, `2h`, or `1d`.",
                 ephemeral=True
             )
 
         if winners < 1:
             return await interaction.response.send_message(
-                "🌸 Winners must be at least 1! (,,>﹏<,,)",
+                "✦ Winner count must be at least 1.",
                 ephemeral=True
             )
 
         end_timestamp = time.time() + seconds
         discord_time = int(end_timestamp)
 
-        embed = make_kawaii_embed(
-            title=f"🌸 GIVEAWAY: {prize} 🎁✨",
+        embed = discord.Embed(
+            title="✦ GIVEAWAY ✦",
             description=(
-                f"Click the button below to enter!\n\n"
-                f"🎁 **Prize:** `{prize}`\n"
-                f"🏆 **Winners:** `{winners}`\n"
-                f"⏰ **Ends:** <t:{discord_time}:R> (<t:{discord_time}:f>)\n"
-                f"🌸 **Hosted by:** {interaction.user.mention}"
+                f"### 🎁 {prize}\n\n"
+                f"**Winners:** `{winners}`\n"
+                f"**Hosted by:** {interaction.user.mention}\n"
+                f"**Ends:** <t:{discord_time}:R> (<t:{discord_time}:f>)\n\n"
+                f"> Click the button below to participate."
             ),
             color=COLOR_ROSE
         )
+        embed.set_footer(text="Destiny ✦ Active Giveaway")
 
-        # Send initial message with empty view
         view = discord.ui.View(timeout=None)
-        # Use dummy button first, we update with message id right after
-        view.add_item(discord.ui.Button(style=discord.ButtonStyle.primary, label="Entering...", emoji="✨"))
+        view.add_item(discord.ui.Button(style=discord.ButtonStyle.primary, label="Entering...", emoji="✦"))
         msg = await target_channel.send(embed=embed, view=view)
 
-        # Update with real custom_id
         real_view = discord.ui.View(timeout=None)
         real_view.add_item(GiveawayButton(message_id=msg.id, entries=0))
         await msg.edit(view=real_view)
@@ -222,8 +225,8 @@ class Giveaways(commands.Cog):
         )
 
         reply = make_kawaii_embed(
-            title=f"🌸 Giveaway Launched! {random_happy()}",
-            description=f"Your giveaway for **{prize}** is now live in {target_channel.mention}! ✨",
+            title="✦ Giveaway Launched",
+            description=f"Giveaway for **{prize}** is live in {target_channel.mention}. 🌸",
             color=COLOR_PINK
         )
         await interaction.response.send_message(embed=reply, ephemeral=True)
@@ -242,14 +245,14 @@ class Giveaways(commands.Cog):
 
         if not gw:
             return await interaction.response.send_message(
-                "🌸 Could not find a giveaway with that message ID! (｡•́︿•̀｡)",
+                "✦ Could not find a giveaway with that message ID.",
                 ephemeral=True
             )
 
         participants = gw.get("participants", [])
         if not participants:
             return await interaction.response.send_message(
-                "🌸 No cuties entered this giveaway to reroll from! (◞‸◟；)",
+                "✦ No participants available to reroll.",
                 ephemeral=True
             )
 
@@ -257,12 +260,12 @@ class Giveaways(commands.Cog):
         channel = self.bot.get_channel(gw["channel_id"])
         if channel:
             await channel.send(
-                f"🎉 (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧ **REROLL!** The new winner for **{gw['prize']}** is <@{new_winner_id}>! Congratulations! 🍰✨"
+                f"✦ **REROLL:** The new winner for **{gw['prize']}** is <@{new_winner_id}>! Congratulations! 🌸"
             )
 
         reply = make_kawaii_embed(
-            title=f"🌸 Reroll Complete! {random_happy()}",
-            description=f"Selected new winner <@{new_winner_id}> for **{gw['prize']}**! 🎀",
+            title="✦ Reroll Complete",
+            description=f"Selected new winner <@{new_winner_id}> for **{gw['prize']}**.",
             color=COLOR_SUCCESS
         )
         await interaction.response.send_message(embed=reply, ephemeral=True)

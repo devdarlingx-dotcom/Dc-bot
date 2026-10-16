@@ -16,22 +16,22 @@
                 <h1>Destiny Kawaii Panel</h1>
                 <span class="sparkle">✨</span>
             </div>
-            <p class="subtitle">Welcome back, Master! (◕‿◕✿) • Your cute Discord server companion</p>
+            <p class="subtitle">Welcome back, Master. ✦ Discord Management System</p>
         </header>
 
         {% if not authenticated %}
         <div class="card login-card">
-            <h2>🌸 Master Access Required (｡♥‿♥｡)</h2>
+            <h2>✦ Master Access Required ✦</h2>
             <p>Please enter your secret dashboard key to unlock controls:</p>
             <form action="/login" method="POST" class="form">
                 <div class="input-group">
                     <label>Dashboard Secret Key 🎀</label>
                     <input type="password" name="secret" placeholder="Enter your secret..." required>
                 </div>
-                <button type="submit" class="btn btn-primary">Unlock Panel ✨</button>
+                <button type="submit" class="btn btn-primary">Unlock Panel ✦</button>
             </form>
             {% if error %}
-            <p class="error-msg">🌸 {{ error }} (｡•́︿•̀｡)</p>
+            <p class="error-msg">✦ {{ error }}</p>
             {% endif %}
         </div>
         {% else %}
@@ -179,7 +179,7 @@
         {% endif %}
 
         <footer class="footer">
-            <p>Made with love for Master • Destiny Kawaii Bot • (｡♥‿♥｡) 🌸</p>
+            <p>Destiny ✦ Master Control System</p>
         </footer>
     </div>
 

@@ -3,10 +3,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import database
-from config import is_owner, denied_embed, make_kawaii_embed, COLOR_PINK, COLOR_MINT, COLOR_ROSE, COLOR_PURPLE, random_happy
+from config import is_owner, denied_embed, make_kawaii_embed, COLOR_PINK, COLOR_MINT, COLOR_ROSE, COLOR_PURPLE
 
 # --- Modals ---
-class BroadcastModal(discord.ui.Modal, title="📢 Send Kawaii Announcement"):
+class BroadcastModal(discord.ui.Modal, title="✦ Broadcast Announcement ✦"):
     channel_id = discord.ui.TextInput(
         label="Channel ID or Mention",
         placeholder="e.g. 1560475069824634880 or #announcements",
@@ -14,13 +14,13 @@ class BroadcastModal(discord.ui.Modal, title="📢 Send Kawaii Announcement"):
     )
     title_input = discord.ui.TextInput(
         label="Announcement Title",
-        placeholder="Super Exciting News! 🌸",
+        placeholder="Important Update",
         required=True
     )
     content_input = discord.ui.TextInput(
         label="Announcement Message",
         style=discord.TextStyle.paragraph,
-        placeholder="Write your sweet announcement here...",
+        placeholder="Type your announcement content here...",
         required=True
     )
 
@@ -29,28 +29,32 @@ class BroadcastModal(discord.ui.Modal, title="📢 Send Kawaii Announcement"):
         clean_id = self.channel_id.value.replace("<#", "").replace(">", "").strip()
         channel = guild.get_channel(int(clean_id)) if clean_id.isdigit() else None
         if not channel:
-            return await interaction.response.send_message("🌸 Could not find that channel! (｡•́︿•̀｡)", ephemeral=True)
+            return await interaction.response.send_message("✦ Channel not found. Verify the ID.", ephemeral=True)
 
-        embed = make_kawaii_embed(
-            title=f"🌸 {self.title_input.value} ✨",
+        embed = discord.Embed(
+            title=f"✦ {self.title_input.value.upper()} ✦",
             description=self.content_input.value,
             color=COLOR_PINK
         )
+        if guild.icon:
+            embed.set_author(name=guild.name, icon_url=guild.icon.url)
+        embed.set_footer(text="Destiny ✦ Server Announcement")
+
         await channel.send(embed=embed)
         await interaction.response.send_message(
-            f"🌸 Announcement successfully broadcasted to {channel.mention}! {random_happy()} ✨",
+            f"✦ Announcement published to {channel.mention}. 🌸",
             ephemeral=True
         )
 
-class ScriptUpdateModal(discord.ui.Modal, title="🚀 Announce Script Update"):
+class ScriptUpdateModal(discord.ui.Modal, title="✦ Announce Script Update ✦"):
     channel_id = discord.ui.TextInput(
         label="Target Channel ID (Optional)",
-        placeholder="Leave empty for updates channel or type channel ID",
+        placeholder="Leave empty for updates channel or paste ID",
         required=False
     )
     script_name = discord.ui.TextInput(
         label="Script Name",
-        placeholder="e.g. Destiny Hub / Auto Farm",
+        placeholder="e.g. Destiny Hub",
         required=True
     )
     version = discord.ui.TextInput(
@@ -61,7 +65,7 @@ class ScriptUpdateModal(discord.ui.Modal, title="🚀 Announce Script Update"):
     changelog = discord.ui.TextInput(
         label="Changelog / What's New",
         style=discord.TextStyle.paragraph,
-        placeholder="- Added cute new features\n- Fixed bugs\n- Performance boost!",
+        placeholder="- Added new features\n- Fixed bugs\n- Performance improvements",
         required=True
     )
     download_url = discord.ui.TextInput(
@@ -79,7 +83,6 @@ class ScriptUpdateModal(discord.ui.Modal, title="🚀 Announce Script Update"):
                 target_channel = guild.get_channel(int(clean_id))
 
         if not target_channel:
-            # Check configured updates channel or find by name
             settings = await database.get_guild_settings(guild.id)
             if settings.get("updates_channel_id"):
                 target_channel = guild.get_channel(settings["updates_channel_id"])
@@ -105,13 +108,13 @@ class ScriptUpdateModal(discord.ui.Modal, title="🚀 Announce Script Update"):
                 author=interaction.user.mention
             )
             await interaction.response.send_message(
-                f"🌸 Script update posted to {target_channel.mention}! {random_happy()} 🚀",
+                f"✦ Script update published to {target_channel.mention}. 🌸",
                 ephemeral=True
             )
         else:
-            await interaction.response.send_message("🌸 ScriptUpdates cog is not loaded! (｡•́︿•̀｡)", ephemeral=True)
+            await interaction.response.send_message("✦ ScriptUpdates module is not loaded.", ephemeral=True)
 
-class QuickGiveawayModal(discord.ui.Modal, title="🎁 Quick Giveaway Creator"):
+class QuickGiveawayModal(discord.ui.Modal, title="✦ Quick Giveaway Creator ✦"):
     channel_id = discord.ui.TextInput(
         label="Channel ID (Optional)",
         placeholder="Leave empty for current channel",
@@ -119,7 +122,7 @@ class QuickGiveawayModal(discord.ui.Modal, title="🎁 Quick Giveaway Creator"):
     )
     prize = discord.ui.TextInput(
         label="Prize Name",
-        placeholder="Discord Nitro / VIP Script Access 🍰",
+        placeholder="e.g. Discord Nitro / VIP Access",
         required=True
     )
     duration = discord.ui.TextInput(
@@ -147,7 +150,7 @@ class QuickGiveawayModal(discord.ui.Modal, title="🎁 Quick Giveaway Creator"):
 
         seconds = parse_duration(self.duration.value)
         if not seconds:
-            return await interaction.response.send_message("🌸 Invalid duration! Use 10m, 1h, etc. (｡•́︿•̀｡)", ephemeral=True)
+            return await interaction.response.send_message("✦ Invalid duration format. Use 10m, 1h, etc.", ephemeral=True)
 
         try:
             winners_int = int(self.winners.value)
@@ -155,20 +158,21 @@ class QuickGiveawayModal(discord.ui.Modal, title="🎁 Quick Giveaway Creator"):
             winners_int = 1
 
         end_timestamp = time.time() + seconds
-        embed = make_kawaii_embed(
-            title=f"🌸 GIVEAWAY: {self.prize.value} 🎁✨",
+        embed = discord.Embed(
+            title="✦ GIVEAWAY ✦",
             description=(
-                f"Click the button below to enter!\n\n"
-                f"🎁 **Prize:** `{self.prize.value}`\n"
-                f"🏆 **Winners:** `{winners_int}`\n"
-                f"⏰ **Ends:** <t:{int(end_timestamp)}:R>\n"
-                f"🌸 **Hosted by:** {interaction.user.mention}"
+                f"### 🎁 {self.prize.value}\n\n"
+                f"**Winners:** `{winners_int}`\n"
+                f"**Hosted by:** {interaction.user.mention}\n"
+                f"**Ends:** <t:{int(end_timestamp)}:R> (<t:{int(end_timestamp)}:f>)\n\n"
+                f"> Click the button below to participate."
             ),
             color=COLOR_ROSE
         )
+        embed.set_footer(text="Destiny ✦ Active Giveaway")
 
         view = discord.ui.View(timeout=None)
-        view.add_item(discord.ui.Button(style=discord.ButtonStyle.primary, label="Entering...", emoji="✨"))
+        view.add_item(discord.ui.Button(style=discord.ButtonStyle.primary, label="Entering...", emoji="✦"))
         msg = await target_channel.send(embed=embed, view=view)
 
         real_view = discord.ui.View(timeout=None)
@@ -185,7 +189,7 @@ class QuickGiveawayModal(discord.ui.Modal, title="🎁 Quick Giveaway Creator"):
         )
 
         await interaction.response.send_message(
-            f"🌸 Giveaway live in {target_channel.mention}! {random_happy()} ✨",
+            f"✦ Giveaway live in {target_channel.mention}. 🌸",
             ephemeral=True
         )
 
@@ -198,7 +202,7 @@ class AutoRoleSelect(discord.ui.RoleSelect):
         role = self.values[0]
         await database.set_autorole(interaction.guild_id, role.id)
         await interaction.response.send_message(
-            f"🌸 Default auto-role set to **{role.mention}**! {random_happy()} ✨",
+            f"✦ Default auto-role set to **{role.name}**. 🌸",
             ephemeral=True
         )
 
@@ -215,7 +219,7 @@ class WelcomeChannelSelect(discord.ui.ChannelSelect):
         channel = self.values[0]
         await database.set_welcome_channel(interaction.guild_id, channel.id)
         await interaction.response.send_message(
-            f"🌸 Welcome cards will now be sent to {channel.mention}! {random_happy()} 💕",
+            f"✦ Welcome cards will be sent to {channel.mention}. 🌸",
             ephemeral=True
         )
 
@@ -266,21 +270,21 @@ class ControlPanel(commands.Cog):
         welcome_ch = guild.get_channel(settings["welcome_channel_id"]) if settings.get("welcome_channel_id") else None
 
         embed = discord.Embed(
-            title="🌸✨ DESTINY MASTER CONTROL CENTER ✨🌸",
+            title="✦ DESTINY MASTER CONTROL ✦",
             description=(
-                f"Welcome back, master <@{guild.owner_id}>! (◕‿◕✿)\n"
-                "Use the interactive buttons below to control all server systems effortlessly!\n\n"
-                f"📊 **Server:** `{guild.name}` (`{guild.id}`)\n"
-                f"👥 **Cuties (Members):** `{guild.member_count}`\n"
-                f"⚡ **Bot Latency:** `{round(self.bot.latency * 1000)}ms`\n\n"
-                f"🌸 **Auto-Role:** {autorole.mention if autorole else '`Disabled`'}\n"
-                f"🎀 **Welcome Channel:** {welcome_ch.mention if welcome_ch else '`Auto / None`'}\n"
-                f"🤍 **System Health:** `100% Sparkly & Online` ✨"
+                f"Welcome back, Master <@{guild.owner_id}>. 🌸\n"
+                "Select any module below to manage server operations.\n\n"
+                f"**Server:** `{guild.name}` (`{guild.id}`)\n"
+                f"**Members:** `{guild.member_count}`\n"
+                f"**Bot Latency:** `{round(self.bot.latency * 1000)}ms`\n\n"
+                f"**Auto-Role:** {autorole.mention if autorole else '`Disabled`'}\n"
+                f"**Welcome Channel:** {welcome_ch.mention if welcome_ch else '`Auto / None`'}\n"
+                f"**System Status:** `Online & Operational` ✦"
             ),
             color=COLOR_PURPLE
         )
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
-        embed.set_footer(text=f"Destiny Control System • Only Master Allowed • {random_happy()}")
+        embed.set_footer(text="Destiny ✦ Master System")
         return embed
 
     @app_commands.command(name="panel", description="🌸 Open the master interactive Destiny control center")

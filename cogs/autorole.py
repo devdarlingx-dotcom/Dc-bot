@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import database
-from config import is_owner, denied_embed, make_kawaii_embed, COLOR_MINT, COLOR_PINK, COLOR_WARN, random_happy
+from config import is_owner, denied_embed, make_kawaii_embed, COLOR_MINT, COLOR_PINK, COLOR_WARN
 
 class AutoRole(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -17,13 +17,13 @@ class AutoRole(commands.Cog):
             if role_id:
                 role = member.guild.get_role(role_id)
                 if role:
-                    await member.add_roles(role, reason="Destiny Kawaii Auto-Role 🌸")
+                    await member.add_roles(role, reason="Destiny Auto-Role on join")
         except Exception as e:
             print(f"Error in on_member_join autorole: {e}")
 
     autorole_group = app_commands.Group(
         name="autorole",
-        description="🌸 Configure automatic role assignment for new cuties"
+        description="🌸 Configure automatic role assignment on join"
     )
 
     @autorole_group.command(name="set", description="🌸 Set the default role granted to new members upon joining")
@@ -35,11 +35,10 @@ class AutoRole(commands.Cog):
         bot_member = interaction.guild.get_member(self.bot.user.id)
         if role >= bot_member.top_role:
             embed = make_kawaii_embed(
-                title="🌸 Role Too High! (｡•́︿•̀｡)",
+                title="✦ Role Hierarchy Error",
                 description=(
-                    f"I cannot assign the role **{role.name}** because it is positioned higher "
-                    "than (or equal to) my bot role in server settings!\n"
-                    "Please move my `Destiny` role above it in `Server Settings -> Roles`! 🎀"
+                    f"The role **{role.name}** is positioned higher than the `Destiny` bot role.\n"
+                    "Please move `Destiny` higher in **Server Settings -> Roles**."
                 ),
                 color=COLOR_WARN
             )
@@ -47,11 +46,8 @@ class AutoRole(commands.Cog):
 
         await database.set_autorole(interaction.guild_id, role.id)
         embed = make_kawaii_embed(
-            title=f"🌸 Auto-Role Enabled! {random_happy()}",
-            description=(
-                f"Successfully set **{role.mention}** as the default role!\n"
-                "All new cuties who join will now receive this role automatically! ✨"
-            ),
+            title="✦ Auto-Role Enabled",
+            description=f"New members will now receive **{role.mention}** upon joining. 🌸",
             color=COLOR_MINT
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -63,8 +59,8 @@ class AutoRole(commands.Cog):
 
         await database.set_autorole(interaction.guild_id, None)
         embed = make_kawaii_embed(
-            title="🌸 Auto-Role Disabled",
-            description="Auto-role has been disabled! New members won't receive a role automatically. 🎀",
+            title="✦ Auto-Role Disabled",
+            description="Automatic role assignment has been disabled. 🌸",
             color=COLOR_PINK
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -78,12 +74,12 @@ class AutoRole(commands.Cog):
         role_id = settings.get("autorole_id")
         if role_id:
             role = interaction.guild.get_role(role_id)
-            desc = f"✨ Current Auto-Role: **{role.mention if role else f'Deleted Role ({role_id})'}**"
+            desc = f"✦ Current Auto-Role: **{role.mention if role else f'Unknown Role ({role_id})'}**"
         else:
-            desc = "🎀 Auto-Role is currently **Disabled**."
+            desc = "✦ Auto-Role is currently **Disabled**."
 
         embed = make_kawaii_embed(
-            title="🌸 Auto-Role Status",
+            title="✦ Auto-Role Status",
             description=desc,
             color=COLOR_PINK
         )

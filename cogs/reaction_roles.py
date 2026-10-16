@@ -2,10 +2,10 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import database
-from config import is_owner, denied_embed, make_kawaii_embed, COLOR_MINT, COLOR_PINK, COLOR_ROSE, random_happy
+from config import is_owner, denied_embed, make_kawaii_embed, COLOR_MINT, COLOR_ROSE
 
 class RoleButton(discord.ui.Button):
-    def __init__(self, role_id: int, label: str, emoji: str = "🌸"):
+    def __init__(self, role_id: int, label: str, emoji: str = "✦"):
         super().__init__(
             style=discord.ButtonStyle.secondary,
             label=label,
@@ -19,7 +19,7 @@ class RoleButton(discord.ui.Button):
         role = guild.get_role(self.role_id)
         if not role:
             return await interaction.response.send_message(
-                "🌸 Oh no! This role seems to no longer exist in the server! (｡•́︿•̀｡)",
+                "✦ This role no longer exists in the server.",
                 ephemeral=True
             )
 
@@ -27,13 +27,13 @@ class RoleButton(discord.ui.Button):
         if role in member.roles:
             await member.remove_roles(role, reason="Destiny Button Role Removal")
             await interaction.response.send_message(
-                f"🎀 Removed **{role.name}** from your roles! {random_happy()}",
+                f"✦ Removed **{role.name}** from your roles.",
                 ephemeral=True
             )
         else:
             await member.add_roles(role, reason="Destiny Button Role Claim")
             await interaction.response.send_message(
-                f"🌸 Added **{role.name}** to your roles! {random_happy()} ✨",
+                f"✦ Added **{role.name}** to your roles.",
                 ephemeral=True
             )
 
@@ -56,20 +56,20 @@ class ReactionRoles(commands.Cog):
                 role = guild.get_role(role_id)
                 if not role:
                     return await interaction.response.send_message(
-                        "🌸 This role no longer exists! (｡•́︿•̀｡)",
+                        "✦ This role no longer exists in the server.",
                         ephemeral=True
                     )
                 member = interaction.user
                 if role in member.roles:
                     await member.remove_roles(role, reason="Destiny Role Button Removed")
                     await interaction.response.send_message(
-                        f"🎀 Removed **{role.name}** from you! {random_happy()}",
+                        f"✦ Removed **{role.name}** from your roles.",
                         ephemeral=True
                     )
                 else:
                     await member.add_roles(role, reason="Destiny Role Button Claimed")
                     await interaction.response.send_message(
-                        f"🌸 You have been granted **{role.name}**! {random_happy()} ✨",
+                        f"✦ Added **{role.name}** to your roles.",
                         ephemeral=True
                     )
             except Exception as e:
@@ -117,36 +117,37 @@ class ReactionRoles(commands.Cog):
 
     rr_group = app_commands.Group(
         name="reactionrole",
-        description="🌸 Configure emoji or button roles"
+        description="🌸 Configure role buttons and emoji bindings"
     )
 
-    @rr_group.command(name="button", description="🌸 Post a cute role button panel in a channel")
+    @rr_group.command(name="button", description="🌸 Post an aesthetic role button panel in a channel")
     @app_commands.describe(
         channel="Channel to post the role button in",
         role="The role to toggle on click",
         title="Title of the role card",
         description="Description explaining the role",
         button_label="Text on the button",
-        button_emoji="Emoji on the button"
+        button_emoji="Emoji or symbol on the button"
     )
     async def spawn_button(
         self,
         interaction: discord.Interaction,
         channel: discord.TextChannel,
         role: discord.Role,
-        title: str = "🌸 Self-Assignable Role",
-        description: str = "Click the cute button below to claim or remove this role!",
-        button_label: str = "Claim Role",
-        button_emoji: str = "✨"
+        title: str = "✦ Self-Assignable Role",
+        description: str = "Click the button below to claim or remove this role.",
+        button_label: str = "Toggle Role",
+        button_emoji: str = "✦"
     ):
         if not is_owner(interaction.user.id):
             return await interaction.response.send_message(embed=denied_embed(), ephemeral=True)
 
-        embed = make_kawaii_embed(
-            title=title,
-            description=f"{description}\n\n**Role:** {role.mention}\n**Instructions:** Tap to toggle on/off 🎀",
+        embed = discord.Embed(
+            title=f"✦ {title.upper()} ✦",
+            description=f"{description}\n\n**Role:** {role.mention}",
             color=COLOR_ROSE
         )
+        embed.set_footer(text="Destiny ✦ Role Assignment")
         view = discord.ui.View(timeout=None)
         view.add_item(RoleButton(role_id=role.id, label=button_label, emoji=button_emoji))
 
@@ -160,12 +161,12 @@ class ReactionRoles(commands.Cog):
             title=title
         )
 
-        reply_embed = make_kawaii_embed(
-            title=f"🌸 Role Button Created! {random_happy()}",
-            description=f"Successfully spawned interactive role button in {channel.mention} for **{role.name}**! ✨",
+        reply = make_kawaii_embed(
+            title="✦ Role Button Created",
+            description=f"Created role panel in {channel.mention} for **{role.name}**. 🌸",
             color=COLOR_MINT
         )
-        await interaction.response.send_message(embed=reply_embed, ephemeral=True)
+        await interaction.response.send_message(embed=reply, ephemeral=True)
 
     @rr_group.command(name="emoji", description="🌸 Bind an emoji reaction to a role on an existing message")
     @app_commands.describe(
@@ -190,7 +191,7 @@ class ReactionRoles(commands.Cog):
             target_msg = await channel.fetch_message(msg_id_int)
         except Exception:
             return await interaction.response.send_message(
-                "🌸 Could not find that message! Please verify the ID and channel! (｡•́︿•̀｡)",
+                "✦ Message not found. Verify the ID and channel.",
                 ephemeral=True
             )
 
@@ -198,7 +199,7 @@ class ReactionRoles(commands.Cog):
             await target_msg.add_reaction(emoji)
         except Exception as e:
             return await interaction.response.send_message(
-                f"🌸 Could not add reaction '{emoji}'. Ensure it is a valid unicode or server emoji! {e}",
+                f"✦ Could not add reaction '{emoji}'. Verify the emoji is valid: {e}",
                 ephemeral=True
             )
 
@@ -211,12 +212,12 @@ class ReactionRoles(commands.Cog):
             title=role.name
         )
 
-        reply_embed = make_kawaii_embed(
-            title=f"🌸 Emoji Role Linked! {random_happy()}",
-            description=f"Reacting with {emoji} on [this message]({target_msg.jump_url}) will now grant **{role.mention}**! ✨",
+        reply = make_kawaii_embed(
+            title="✦ Emoji Role Bound",
+            description=f"Reacting with {emoji} on [this message]({target_msg.jump_url}) will grant **{role.mention}**. 🌸",
             color=COLOR_MINT
         )
-        await interaction.response.send_message(embed=reply_embed, ephemeral=True)
+        await interaction.response.send_message(embed=reply, ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(ReactionRoles(bot))

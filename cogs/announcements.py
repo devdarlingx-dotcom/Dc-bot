@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from config import is_owner, denied_embed, make_kawaii_embed, COLOR_PINK, COLOR_MINT, random_happy
+from config import is_owner, denied_embed, make_kawaii_embed, COLOR_PINK, COLOR_MINT
 
 class Announcements(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -18,13 +18,13 @@ class Announcements(commands.Cog):
 
         await channel.send(message)
         reply = make_kawaii_embed(
-            title=f"🌸 Message Sent! {random_happy()}",
-            description=f"Your message was successfully sent to {channel.mention}! ✨",
+            title="✦ Message Delivered",
+            description=f"Message sent to {channel.mention}. 🌸",
             color=COLOR_MINT
         )
         await interaction.response.send_message(embed=reply, ephemeral=True)
 
-    @app_commands.command(name="announce", description="🌸 Broadcast a beautiful kawaii embed announcement")
+    @app_commands.command(name="announce", description="🌸 Broadcast a clean, aesthetic announcement")
     @app_commands.describe(
         channel="Target announcement channel",
         title="Title of the announcement",
@@ -44,20 +44,27 @@ class Announcements(commands.Cog):
         if not is_owner(interaction.user.id):
             return await interaction.response.send_message(embed=denied_embed(), ephemeral=True)
 
-        embed = make_kawaii_embed(
-            title=f"🌸 {title} ✨",
+        embed = discord.Embed(
+            title=f"✦ {title.upper()} ✦",
             description=description,
-            color=COLOR_PINK,
-            image=image_url
+            color=COLOR_PINK
         )
-        embed.set_author(name="Server Announcement", icon_url=interaction.guild.icon.url if interaction.guild.icon else None)
+        if interaction.guild.icon:
+            embed.set_author(name=interaction.guild.name, icon_url=interaction.guild.icon.url)
+        else:
+            embed.set_author(name=interaction.guild.name)
+
+        if image_url:
+            embed.set_image(url=image_url)
+
+        embed.set_footer(text="Destiny ✦ Server Announcement")
 
         content = ping_role.mention if ping_role else None
         await channel.send(content=content, embed=embed)
 
         reply = make_kawaii_embed(
-            title=f"🌸 Announcement Posted! {random_happy()}",
-            description=f"Your announcement was published to {channel.mention}! 🎀",
+            title="✦ Announcement Published",
+            description=f"Broadcasted to {channel.mention}. 🌸",
             color=COLOR_MINT
         )
         await interaction.response.send_message(embed=reply, ephemeral=True)

@@ -3,7 +3,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import database
-from config import is_owner, denied_embed, make_kawaii_embed, COLOR_PINK, COLOR_ROSE, COLOR_MINT, COLOR_WARN, random_happy
+from config import is_owner, denied_embed, make_kawaii_embed, COLOR_PINK, COLOR_ROSE, COLOR_MINT, COLOR_WARN
 
 def normalize_channel_name(name: str) -> str:
     """Normalizes Unicode aesthetic/mathematical script fonts to standard ASCII."""
@@ -34,12 +34,10 @@ class Welcome(commands.Cog):
             for c in guild.text_channels:
                 norm = normalize_channel_name(c.name)
                 if "welcome" in norm or "bienvenid" in norm or "llegada" in norm:
-                    # Save it for future lookups
                     await database.set_welcome_channel(guild.id, c.id)
-                    print(f"🌸 Auto-detected and bound welcome channel: #{c.name} ({c.id})")
                     return c
 
-            # 3. Known fallback for user's specific server if present
+            # 3. Known fallback for user's specific server
             fallback_channel = guild.get_channel(1560482248598355968)
             if fallback_channel:
                 await database.set_welcome_channel(guild.id, fallback_channel.id)
@@ -51,38 +49,33 @@ class Welcome(commands.Cog):
         return None
 
     async def send_welcome_embed(self, member: discord.Member, channel: discord.TextChannel):
-        """Constructs and sends the kawaii welcome card."""
+        """Constructs and sends a clean, aesthetic kawaii welcome card."""
         try:
             avatar_url = member.display_avatar.url if member.display_avatar else None
             embed = discord.Embed(
-                title=f"🌸 Welcome to {member.guild.name}! 🌸",
+                title=f"✦ WELCOME TO {member.guild.name.upper()} ✦",
                 description=(
-                    f"(੭ˊᵕˋ)੭ Yay! A sweet new cutie has arrived!\n"
-                    f"Welcome {member.mention} to our cozy haven! 💕\n\n"
-                    f"✨ **You are Cutie #:** `{member.guild.member_count}`\n"
-                    f"🎀 **Account Born:** <t:{int(member.created_at.timestamp())}:R>\n\n"
-                    f"*Please make yourself at home, grab some tea, and have fun!* 🍰"
+                    f"Welcome {member.mention} to our community. 🌸\n\n"
+                    f"**Member:** `#{member.guild.member_count}`\n"
+                    f"**Account Created:** <t:{int(member.created_at.timestamp())}:R>\n\n"
+                    f"> Please check out our guidelines and enjoy your stay."
                 ),
                 color=COLOR_ROSE
             )
             if avatar_url:
                 embed.set_thumbnail(url=avatar_url)
-            embed.set_footer(text=f"Destiny Welcomer • {random_happy()} ✨")
+            embed.set_footer(text=f"Destiny ✦ Member #{member.guild.member_count}")
             
-            await channel.send(content=f"🌸 Welcome {member.mention}! ✨", embed=embed)
-            print(f"🌸 [WELCOME] Successfully sent welcome card for {member.name} in #{channel.name}!")
+            await channel.send(content=f"🌸 Welcome {member.mention}", embed=embed)
         except Exception as e:
             print(f"❌ [WELCOME] Failed to send welcome card: {e}")
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         """Dispatches welcome card when someone joins."""
-        print(f"🌸 [WELCOME] on_member_join triggered for: {member.name} ({member.id})")
         channel = await self.resolve_welcome_channel(member.guild)
         if channel:
             await self.send_welcome_embed(member, channel)
-        else:
-            print(f"⚠️ [WELCOME] No welcome channel found for guild '{member.guild.name}' ({member.guild.id})")
 
     welcome_group = app_commands.Group(
         name="welcome",
@@ -97,8 +90,8 @@ class Welcome(commands.Cog):
 
         await database.set_welcome_channel(interaction.guild_id, channel.id)
         embed = make_kawaii_embed(
-            title=f"🌸 Welcome Channel Configured! {random_happy()}",
-            description=f"Welcome messages will now be posted in {channel.mention}! ✨",
+            title="✦ Welcome Channel Configured",
+            description=f"Welcome cards will now be sent to {channel.mention}. 🌸",
             color=COLOR_MINT
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)
@@ -116,28 +109,27 @@ class Welcome(commands.Cog):
         if send_to_channel and channel:
             await self.send_welcome_embed(interaction.user, channel)
             reply = make_kawaii_embed(
-                title=f"🌸 Welcome Card Sent! {random_happy()}",
-                description=f"A test welcome card has been posted in {channel.mention}! Check it out! ✨",
+                title="✦ Welcome Card Preview Sent",
+                description=f"Sent a test card to {channel.mention}. 🌸",
                 color=COLOR_MINT
             )
             await interaction.response.send_message(embed=reply, ephemeral=True)
         else:
             avatar_url = interaction.user.display_avatar.url if interaction.user.display_avatar else None
             embed = discord.Embed(
-                title=f"🌸 [TEST] Welcome to {interaction.guild.name}! 🌸",
+                title=f"✦ WELCOME TO {interaction.guild.name.upper()} ✦",
                 description=(
-                    f"(੭ˊᵕˋ)੭ Yay! A sweet new cutie has arrived!\n"
-                    f"Welcome {interaction.user.mention} to our cozy haven! 💕\n\n"
-                    f"✨ **You are Cutie #:** `{interaction.guild.member_count}`\n"
-                    f"🎀 **Account Born:** <t:{int(interaction.user.created_at.timestamp())}:R>\n\n"
-                    f"*Please make yourself at home, grab some tea, and have fun!* 🍰"
+                    f"Welcome {interaction.user.mention} to our community. 🌸\n\n"
+                    f"**Member:** `#{interaction.guild.member_count}`\n"
+                    f"**Account Created:** <t:{int(interaction.user.created_at.timestamp())}:R>\n\n"
+                    f"> Please check out our guidelines and enjoy your stay."
                 ),
                 color=COLOR_ROSE
             )
             if avatar_url:
                 embed.set_thumbnail(url=avatar_url)
-            embed.set_footer(text=f"Destiny Welcomer (Preview) • {random_happy()} ✨")
-            await interaction.response.send_message(content=f"🌸 Welcome {interaction.user.mention}! ✨", embed=embed, ephemeral=True)
+            embed.set_footer(text=f"Destiny ✦ Preview")
+            await interaction.response.send_message(content=f"🌸 Welcome {interaction.user.mention}", embed=embed, ephemeral=True)
 
     @welcome_group.command(name="status", description="🌸 View current welcome channel setup")
     async def status_welcome(self, interaction: discord.Interaction):
@@ -146,14 +138,14 @@ class Welcome(commands.Cog):
 
         channel = await self.resolve_welcome_channel(interaction.guild)
         if channel:
-            desc = f"✨ Welcome messages are sent to: {channel.mention} (`{channel.id}`)"
+            desc = f"✦ Active welcome channel: {channel.mention} (`{channel.id}`)"
             color = COLOR_MINT
         else:
-            desc = "🎀 No welcome channel configured. Use `/welcome set-channel` to pick one!"
+            desc = "✦ No welcome channel configured. Use `/welcome set-channel` to bind one."
             color = COLOR_WARN
 
         embed = make_kawaii_embed(
-            title="🌸 Welcome Channel Status",
+            title="✦ Welcome Status",
             description=desc,
             color=color
         )
@@ -166,8 +158,8 @@ class Welcome(commands.Cog):
 
         await database.set_welcome_channel(interaction.guild_id, None)
         embed = make_kawaii_embed(
-            title="🌸 Welcome Messages Disabled",
-            description="Welcome messages have been disabled! 🎀",
+            title="✦ Welcome Disabled",
+            description="Automatic welcome cards have been disabled. 🌸",
             color=COLOR_PINK
         )
         await interaction.response.send_message(embed=embed, ephemeral=True)

@@ -108,11 +108,15 @@ class WebDashboard:
 
         channel = self.bot.get_channel(channel_id)
         if channel:
-            embed = make_kawaii_embed(
-                title=f"🌸 {title} ✨",
+            embed = discord.Embed(
+                title=f"✦ {title.upper()} ✦",
                 description=description,
                 color=COLOR_PINK
             )
+            guild = channel.guild
+            if guild and guild.icon:
+                embed.set_author(name=guild.name, icon_url=guild.icon.url)
+            embed.set_footer(text="Destiny ✦ Server Announcement")
             await channel.send(embed=embed)
 
         return web.HTTPFound("/")
