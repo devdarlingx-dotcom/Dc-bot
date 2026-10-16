@@ -84,8 +84,10 @@ class ScriptUpdateModal(discord.ui.Modal, title="🚀 Announce Script Update"):
             if settings.get("updates_channel_id"):
                 target_channel = guild.get_channel(settings["updates_channel_id"])
             if not target_channel:
+                import unicodedata
                 for c in guild.text_channels:
-                    if "update" in c.name.lower():
+                    norm = unicodedata.normalize("NFKD", c.name).lower()
+                    if "update" in norm:
                         target_channel = c
                         break
 
