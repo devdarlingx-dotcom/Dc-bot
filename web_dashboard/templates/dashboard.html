@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destiny ✨ Kawaii Master Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="stars-bg"></div>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <span class="sparkle">🌸</span>
+                <h1>Destiny Kawaii Panel</h1>
+                <span class="sparkle">✨</span>
+            </div>
+            <p class="subtitle">Welcome back, Master! (◕‿◕✿) • Your cute Discord server companion</p>
+        </header>
+
+        {% if not authenticated %}
+        <div class="card login-card">
+            <h2>🌸 Master Access Required (｡♥‿♥｡)</h2>
+            <p>Please enter your secret dashboard key to unlock controls:</p>
+            <form action="/login" method="POST" class="form">
+                <div class="input-group">
+                    <label>Dashboard Secret Key 🎀</label>
+                    <input type="password" name="secret" placeholder="Enter your secret..." required>
+                </div>
+                <button type="submit" class="btn btn-primary">Unlock Panel ✨</button>
+            </form>
+            {% if error %}
+            <p class="error-msg">🌸 {{ error }} (｡•́︿•̀｡)</p>
+            {% endif %}
+        </div>
+        {% else %}
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('overview')">📊 Overview</button>
+            <button class="tab-btn" onclick="switchTab('announce')">📢 Announcement</button>
+            <button class="tab-btn" onclick="switchTab('script')">🚀 Script Updates</button>
+            <button class="tab-btn" onclick="switchTab('settings')">⚙️ Settings</button>
+        </nav>
+
+        <!-- Tab Content: Overview -->
+        <div id="tab-overview" class="tab-content active">
+            <div class="grid-cards">
+                <div class="card stat-card">
+                    <div class="stat-icon">🤖</div>
+                    <div class="stat-info">
+                        <h3>Bot Status</h3>
+                        <p class="stat-val online">Online & Sparkly ✨</p>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h3>Server Members</h3>
+                        <p class="stat-val">{{ guild_members }} cuties 💕</p>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-info">
+                        <h3>Bot Latency</h3>
+                        <p class="stat-val">{{ bot_ping }} ms</p>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-icon">🌸</div>
+                    <div class="stat-info">
+                        <h3>Auto-Role</h3>
+                        <p class="stat-val">{{ autorole_name }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <h2>🌸 Quick Master Actions</h2>
+                <p>Manage your server directly from this web page or use <code>/panel</code> in Discord!</p>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="switchTab('announce')">📢 Post Announcement</button>
+                    <button class="btn btn-secondary" onclick="switchTab('script')">🚀 Release Script Update</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Announce -->
+        <div id="tab-announce" class="tab-content">
+            <div class="card">
+                <h2>📢 Broadcast Sweet Announcement ✨</h2>
+                <form action="/api/announce" method="POST" class="form">
+                    <div class="input-group">
+                        <label>Target Channel 🎀</label>
+                        <select name="channel_id" required>
+                            {% for c in channels %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Announcement Title 🌸</label>
+                        <input type="text" name="title" placeholder="Cute News Today!" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Message Content 💕</label>
+                        <textarea name="description" rows="4" placeholder="Type your message here..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send Announcement 🌸</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tab Content: Script Updates -->
+        <div id="tab-script" class="tab-content">
+            <div class="card">
+                <h2>🚀 Announce Script Update 🌸</h2>
+                <p>Broadcast changelog, new versions, and download buttons to your community!</p>
+                <form action="/api/script-update" method="POST" class="form">
+                    <div class="input-group">
+                        <label>Target Channel 🎀</label>
+                        <select name="channel_id" required>
+                            {% for c in channels %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Script Name 🌸</label>
+                        <input type="text" name="script_name" placeholder="Destiny Hub" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Version Tag 🏷️</label>
+                        <input type="text" name="version" placeholder="v2.0" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Changelog / Changes 📝</label>
+                        <textarea name="changelog" rows="4" placeholder="- Added new features&#10;- Fixed bugs&#10;- 2x faster!" required></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Download / Script Link 📦 (Optional)</label>
+                        <input type="url" name="download_url" placeholder="https://example.com/script">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Publish Update 🚀✨</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tab Content: Settings -->
+        <div id="tab-settings" class="tab-content">
+            <div class="card">
+                <h2>⚙️ Server Configuration 🎀</h2>
+                <form action="/api/settings" method="POST" class="form">
+                    <div class="input-group">
+                        <label>Default Auto-Role for New Members 🌸</label>
+                        <select name="autorole_id">
+                            <option value="">Disabled (None)</option>
+                            {% for r in roles %}
+                            <option value="{{ r.id }}" {% if r.id == current_autorole_id %}selected{% endif %}>{{ r.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Welcome Messages Channel 💕</label>
+                        <select name="welcome_channel_id">
+                            <option value="">Disabled (None)</option>
+                            {% for c in channels %}
+                            <option value="{{ c.id }}" {% if c.id == current_welcome_channel_id %}selected{% endif %}>{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Settings ✨</button>
+                </form>
+            </div>
+        </div>
+
+        {% endif %}
+
+        <footer class="footer">
+            <p>Made with love for Master • Destiny Kawaii Bot • (｡♥‿♥｡) 🌸</p>
+        </footer>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            const btn = event ? event.target : null;
+            if (btn) btn.classList.add('active');
+            
+            const content = document.getElementById('tab-' + tabId);
+            if (content) content.classList.add('active');
+        }
+    </script>
+</body>
+</html>
