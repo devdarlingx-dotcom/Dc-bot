@@ -296,5 +296,21 @@ class ControlPanel(commands.Cog):
         view = MasterPanelView(self.bot)
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
+    @commands.command(name="panel")
+    async def prefix_panel(self, ctx: commands.Context):
+        """Prefix fallback: !panel"""
+        if not is_owner(ctx.author.id):
+            return await ctx.send(embed=denied_embed())
+
+        embed = await self.generate_panel_embed(ctx.guild)
+        view = MasterPanelView(self.bot)
+        await ctx.send(embed=embed, view=view)
+
+    @commands.command(name="ping")
+    async def prefix_ping(self, ctx: commands.Context):
+        """Prefix fallback: !ping"""
+        latency = round(self.bot.latency * 1000)
+        await ctx.send(f"✦ Pong! Latency: `{latency}ms` 🌸")
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(ControlPanel(bot))

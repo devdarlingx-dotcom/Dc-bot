@@ -49,7 +49,13 @@ class DestinyBot(commands.Bot):
             except Exception as e:
                 print(f"❌ Failed to load cog {cog}: {e}", file=sys.stderr)
 
-        # 3. Synchronize Slash Commands in background so bot is online instantly
+        # 3. Start Kawaii Web Dashboard immediately for Railway port health checks
+        try:
+            asyncio.create_task(start_web_server(self))
+        except Exception as e:
+            print(f"❌ Failed to start web dashboard: {e}")
+
+        # 4. Synchronize Slash Commands in background so bot is online instantly
         async def sync_bg():
             try:
                 synced = await self.tree.sync()
@@ -68,20 +74,17 @@ class DestinyBot(commands.Bot):
         print(f"🎀 Privileged Intents: {'Enabled (Full Auto-Role & Welcome)' if self.privileged_enabled else 'Disabled in Portal (Standard Mode)'}")
         print("=" * 60)
 
-        # Start Kawaii Web Dashboard once online
-        if not getattr(self, "web_started", False):
-            self.web_started = True
-            try:
-                asyncio.create_task(start_web_server(self))
-            except Exception as e:
-                print(f"❌ Failed to start web dashboard: {e}")
-
         # Set cute Kawaii Discord presence
         activity = discord.Activity(
             type=discord.ActivityType.watching,
             name="Master 🌸 | /panel ✨"
         )
         await self.change_presence(status=discord.Status.online, activity=activity)
+
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+        await self.process_commands(message)
 
 async def run_bot():
     if not DISCORD_TOKEN:
