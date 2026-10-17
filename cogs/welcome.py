@@ -31,17 +31,18 @@ class Welcome(commands.Cog):
                     return channel
 
             # 2. Auto-detect by searching normalized channel names
-            for c in guild.text_channels:
+            channels = guild.text_channels
+            if not channels:
+                try:
+                    channels = [c for c in await guild.fetch_channels() if isinstance(c, discord.TextChannel)]
+                except Exception:
+                    channels = []
+
+            for c in channels:
                 norm = normalize_channel_name(c.name)
-                if "welcome" in norm or "bienvenid" in norm or "llegada" in norm:
+                if "welcome" in norm or "bienvenid" in norm or "llegada" in norm or "join" in norm:
                     await database.set_welcome_channel(guild.id, c.id)
                     return c
-
-            # 3. Known fallback for user's specific server
-            fallback_channel = guild.get_channel(1560482248598355968)
-            if fallback_channel:
-                await database.set_welcome_channel(guild.id, fallback_channel.id)
-                return fallback_channel
 
         except Exception as e:
             print(f"❌ Error resolving welcome channel: {e}")
