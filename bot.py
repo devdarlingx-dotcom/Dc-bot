@@ -91,7 +91,7 @@ async def run_bot():
         print("❌ Error: DISCORD_TOKEN is missing! Please set it in .env.", file=sys.stderr)
         sys.exit(1)
 
-    privileged = os.getenv("PRIVILEGED_INTENTS", "false").lower() in ("true", "1", "yes")
+    privileged = os.getenv("PRIVILEGED_INTENTS", "true").lower() in ("true", "1", "yes")
     print(f"🌸 Starting Destiny Bot (Privileged Intents: {'ON' if privileged else 'OFF - Standard Mode'})... ✨")
 
     try:
