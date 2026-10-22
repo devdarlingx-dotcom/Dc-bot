@@ -25,6 +25,8 @@ class AutoRole(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         """Automatically assigns the configured default role to new members."""
+        if member.bot:
+            return
         try:
             settings = await database.get_guild_settings(member.guild.id)
             role_id = settings.get("autorole_id")
