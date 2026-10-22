@@ -34,3 +34,8 @@ data/*.sqlite3
 # Logs & Temporary files
 *.log
 .DS_Store
+
+# Environment variables
+.env
+.env.local
+.env.*.local
