@@ -24,18 +24,50 @@ class AutoRole(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        """Automatically assigns the configured default role to new members."""
+        """Automatically assigns unverified to new members and prevents premature Members role."""
         if member.bot:
             return
         try:
             settings = await database.get_guild_settings(member.guild.id)
             role_id = settings.get("autorole_id")
+            role_members = member.guild.get_role(1560798646889615551)
+
             if role_id:
-                role = member.guild.get_role(role_id)
-                if role:
-                    await member.add_roles(role, reason="Destiny Auto-Role on join")
+                target_role = member.guild.get_role(role_id)
+                if target_role:
+                    await member.add_roles(target_role, reason="Destiny Auto-Role on join (unverified)")
+
+            # Safety check: if another bot or glitch granted Members on join, remove it!
+            if role_members and role_members in member.roles:
+                await member.remove_roles(role_members, reason="Destiny: New members must verify first before receiving Members role")
         except Exception as e:
             print(f"Error in on_member_join autorole: {e}")
+
+    @commands.Cog.listener()
+    async def on_member_update(self, before: discord.Member, after: discord.Member):
+        """Seamlessly syncs verification: removes unverified when verified, grants Members if Security bot verifies."""
+        if after.bot:
+            return
+
+        role_members = after.guild.get_role(1560798646889615551)
+        role_unverified = after.guild.get_role(1560798566450991114)
+        if not role_members or not role_unverified:
+            return
+
+        # Case 1: Member received 'Members' role -> strip 'unverified'
+        if role_members in after.roles and role_unverified in after.roles:
+            try:
+                await after.remove_roles(role_unverified, reason="Destiny: Member verified, removing unverified role")
+            except Exception as e:
+                print(f"Error removing unverified from verified member {after}: {e}")
+
+        # Case 2: Security bot removed 'unverified' -> ensure they receive 'Members'
+        elif role_unverified in before.roles and role_unverified not in after.roles:
+            if role_members not in after.roles:
+                try:
+                    await after.add_roles(role_members, reason="Destiny: Security bot verified member, granting Members role")
+                except Exception as e:
+                    print(f"Error granting Members to verified member {after}: {e}")
 
     autorole_group = app_commands.Group(
         name="autorole",
