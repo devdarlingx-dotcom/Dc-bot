@@ -7,7 +7,8 @@ load_dotenv()
 
 # Bot Credentials & Configuration
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN", "")
-OWNER_ID = int(os.getenv("OWNER_ID", "1560466119880347730"))
+OWNER_ID = int(os.getenv("OWNER_ID", "1551114678858424446"))
+OWNER_IDS = {OWNER_ID, 1551114678858424446, 1560466119880347730}
 PORT = int(os.getenv("PORT", "5000"))
 DASHBOARD_SECRET = os.getenv("DASHBOARD_SECRET", "destiny_kawaii_key_2026")
 DATABASE_PATH = os.getenv("DATABASE_PATH", "data/destiny.db")
@@ -25,7 +26,7 @@ COLOR_SUCCESS = 0xB5EAD7
 
 def is_owner(user_id: int) -> bool:
     """Strictly checks if user matches the bot owner ID."""
-    return user_id == OWNER_ID
+    return user_id in OWNER_IDS
 
 def denied_embed() -> discord.Embed:
     """Clean aesthetic embed shown when an unauthorized user attempts an action."""
